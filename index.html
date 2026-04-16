@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Atividades e Gestão de Voluntariado</title>
+    <title>Registro de Atividades</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,27 +19,42 @@
         }
         h1, h2 {
             color: #ffd700;
+            text-align: center;
         }
         form {
             background-color: #1e1e1e;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
-        input, select, button {
+        label {
             display: block;
+            margin-bottom: 5px;
+            color: #ffd700;
+        }
+        input, select, textarea {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            margin-bottom: 15px;
             border: 1px solid #333;
             border-radius: 4px;
             background-color: #2a2a2a;
             color: #ffffff;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
         }
         button {
             background-color: #ffd700;
             color: #121212;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
             cursor: pointer;
+            font-weight: bold;
         }
         button:hover {
             background-color: #e6c200;
@@ -48,41 +63,71 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            background-color: #1e1e1e;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
         th, td {
             padding: 10px;
-            border: 1px solid #333;
             text-align: left;
+            border-bottom: 1px solid #333;
         }
         th {
             background-color: #ffd700;
             color: #121212;
         }
+        .actions button {
+            margin-right: 5px;
+            padding: 5px 10px;
+        }
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .filters select, .filters input {
+            flex: 1;
+            min-width: 150px;
+        }
+        .report {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
         .hidden {
             display: none;
         }
-        .logout {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            table {
+                font-size: 14px;
+            }
+            th, td {
+                padding: 5px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Registro de Atividades e Gestão de Voluntariado</h1>
-        <div id="login-section">
-            <form id="login-form">
-                <h2>Login</h2>
-                <input type="text" id="username" placeholder="Usuário" required>
-                <input type="password" id="password" placeholder="Senha" required>
+        <h1>Registro de Atividades</h1>
+        <div id="login">
+            <form id="loginForm">
+                <label for="username">Usuário:</label>
+                <input type="text" id="username" required>
+                <label for="password">Senha:</label>
+                <input type="password" id="password" required>
                 <button type="submit">Entrar</button>
             </form>
         </div>
-        <div id="app-section" class="hidden">
-            <button class="logout" onclick="logout()">Sair</button>
-            <h2>Registrar Atividade</h2>
-            <form id="activity-form">
+        <div id="app" class="hidden">
+            <h2>Bem-vindo, <span id="currentUser"></span></h2>
+            <form id="activityForm">
+                <label for="activity">Atividade:</label>
                 <select id="activity" required>
                     <option value="">Selecione uma atividade</option>
                     <option value="Animais">Animais</option>
@@ -105,40 +150,47 @@
                     <option value="DIR SPA">DIR SPA</option>
                     <option value="Extras">Extras</option>
                 </select>
+                <label for="date">Data:</label>
                 <input type="date" id="date" required>
-                <input type="time" id="start-time" required>
-                <input type="time" id="end-time" required>
-                <button type="submit">Registrar</button>
+                <label for="startTime">Hora Inicial:</label>
+                <input type="time" id="startTime" required>
+                <label for="endTime">Hora Final:</label>
+                <input type="time" id="endTime" required>
+                <label for="description">Descrição (Obrigatório):</label>
+                <textarea id="description" required placeholder="Descreva a atividade realizada"></textarea>
+                <button type="submit">Registrar Atividade</button>
             </form>
-            <h2>Registros</h2>
-            <div>
-                <select id="filter-user">
-                    <option value="">Todos os usuários</option>
+            <div class="filters">
+                <select id="filterUser">
+                    <option value="">Todos os Usuários</option>
                 </select>
-                <select id="filter-activity">
-                    <option value="">Todas as atividades</option>
+                <select id="filterActivity">
+                    <option value="">Todas as Atividades</option>
                 </select>
-                <button onclick="applyFilters()">Filtrar</button>
+                <input type="month" id="filterMonth">
+                <button id="applyFilters">Aplicar Filtros</button>
             </div>
-            <table id="records-table">
+            <table id="recordsTable">
                 <thead>
                     <tr>
                         <th>Usuário</th>
                         <th>Atividade</th>
                         <th>Data</th>
-                        <th>Hora Início</th>
-                        <th>Hora Fim</th>
-                        <th>Horas</th>
+                        <th>Hora Inicial</th>
+                        <th>Hora Final</th>
+                        <th>Horas Trabalhadas</th>
+                        <th>Descrição</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
-            <h2>Relatório de Banco de Horas</h2>
-            <button onclick="generateReport()">Gerar Relatório Mensal</button>
-            <button onclick="generateAccumulatedReport()">Gerar Relatório Acumulado</button>
-            <div id="report"></div>
-            <button onclick="exportToCSV()">Exportar para CSV</button>
+            <div class="report">
+                <h2>Relatório de Banco de Horas</h2>
+                <p id="monthlyReport"></p>
+                <p id="accumulatedReport"></p>
+                <button id="exportCSV">Exportar para CSV</button>
+            </div>
         </div>
     </div>
     <script>
@@ -158,47 +210,69 @@
             'Paulo': { password: '1234', hoursPerDay: 3 },
             'Annabel': { password: '1234', hoursPerDay: 3 }
         };
-        let currentUser = null;
+        let currentUser = '';
         let records = JSON.parse(localStorage.getItem('records')) || [];
-
-        document.getElementById('login-form').addEventListener('submit', function(e) {
+        const loginForm = document.getElementById('loginForm');
+        const app = document.getElementById('app');
+        const currentUserSpan = document.getElementById('currentUser');
+        const activityForm = document.getElementById('activityForm');
+        const recordsTable = document.getElementById('recordsTable').querySelector('tbody');
+        const filterUser = document.getElementById('filterUser');
+        const filterActivity = document.getElementById('filterActivity');
+        const filterMonth = document.getElementById('filterMonth');
+        const applyFilters = document.getElementById('applyFilters');
+        const monthlyReport = document.getElementById('monthlyReport');
+        const accumulatedReport = document.getElementById('accumulatedReport');
+        const exportCSV = document.getElementById('exportCSV');
+        loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             if (users[username] && users[username].password === password) {
                 currentUser = username;
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('app-section').classList.remove('hidden');
-                loadRecords();
-                populateFilters();
+                currentUserSpan.textContent = username;
+                document.getElementById('login').classList.add('hidden');
+                app.classList.remove('hidden');
+                loadFilters();
+                displayRecords();
+                updateReports();
             } else {
                 alert('Usuário ou senha incorretos');
             }
         });
-
-        document.getElementById('activity-form').addEventListener('submit', function(e) {
+        activityForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const activity = document.getElementById('activity').value;
             const date = document.getElementById('date').value;
-            const startTime = document.getElementById('start-time').value;
-            const endTime = document.getElementById('end-time').value;
-            const hours = calculateHours(startTime, endTime);
-            records.push({ user: currentUser, activity, date, startTime, endTime, hours });
-            localStorage.setItem('records', JSON.stringify(records));
-            loadRecords();
-            document.getElementById('activity-form').reset();
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const description = document.getElementById('description').value;
+            const start = new Date(`${date}T${startTime}`);
+            const end = new Date(`${date}T${endTime}`);
+            const hoursWorked = (end - start) / (1000 * 60 * 60);
+            if (hoursWorked <= 0) {
+                alert('Hora final deve ser após a inicial');
+                return;
+            }
+            const record = {
+                id: Date.now(),
+                user: currentUser,
+                activity,
+                date,
+                startTime,
+                endTime,
+                hoursWorked: hoursWorked.toFixed(2),
+                description
+            };
+            records.push(record);
+            saveRecords();
+            displayRecords();
+            updateReports();
+            activityForm.reset();
         });
-
-        function calculateHours(start, end) {
-            const startDate = new Date(`1970-01-01T${start}:00`);
-            const endDate = new Date(`1970-01-01T${end}:00`);
-            return (endDate - startDate) / (1000 * 60 * 60);
-        }
-
-        function loadRecords(filteredRecords = records) {
-            const tbody = document.querySelector('#records-table tbody');
-            tbody.innerHTML = '';
-            filteredRecords.forEach((record, index) => {
+        function displayRecords(filteredRecords = records) {
+            recordsTable.innerHTML = '';
+            filteredRecords.forEach(record => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${record.user}</td>
@@ -206,114 +280,94 @@
                     <td>${record.date}</td>
                     <td>${record.startTime}</td>
                     <td>${record.endTime}</td>
-                    <td>${record.hours.toFixed(2)}</td>
-                    <td>
-                        <button onclick="editRecord(${index})">Editar</button>
-                        <button onclick="deleteRecord(${index})">Excluir</button>
+                    <td>${record.hoursWorked}h</td>
+                    <td>${record.description}</td>
+                    <td class="actions">
+                        <button onclick="editRecord(${record.id})">Editar</button>
+                        <button onclick="deleteRecord(${record.id})">Excluir</button>
                     </td>
                 `;
-                tbody.appendChild(row);
+                recordsTable.appendChild(row);
             });
         }
-
-        function editRecord(index) {
-            const record = records[index];
-            document.getElementById('activity').value = record.activity;
-            document.getElementById('date').value = record.date;
-            document.getElementById('start-time').value = record.startTime;
-            document.getElementById('end-time').value = record.endTime;
-            records.splice(index, 1);
-            localStorage.setItem('records', JSON.stringify(records));
-            loadRecords();
+        function editRecord(id) {
+            const record = records.find(r => r.id === id);
+            if (record) {
+                document.getElementById('activity').value = record.activity;
+                document.getElementById('date').value = record.date;
+                document.getElementById('startTime').value = record.startTime;
+                document.getElementById('endTime').value = record.endTime;
+                document.getElementById('description').value = record.description;
+                deleteRecord(id);
+            }
         }
-
-        function deleteRecord(index) {
-            records.splice(index, 1);
-            localStorage.setItem('records', JSON.stringify(records));
-            loadRecords();
+        function deleteRecord(id) {
+            records = records.filter(r => r.id !== id);
+            saveRecords();
+            displayRecords();
+            updateReports();
         }
-
-        function populateFilters() {
-            const userFilter = document.getElementById('filter-user');
+        function loadFilters() {
+            filterUser.innerHTML = '<option value="">Todos os Usuários</option>';
             Object.keys(users).forEach(user => {
                 const option = document.createElement('option');
                 option.value = user;
                 option.textContent = user;
-                userFilter.appendChild(option);
+                filterUser.appendChild(option);
             });
-            const activityFilter = document.getElementById('filter-activity');
-            const activities = ['Animais', 'CTG Área Social', 'CTG Lavanderia', 'CTG Banheiros e Vestiários', 'Templos', 'Transfer Escola', 'Almoxarifado', 'Portaria', 'Caseiro', 'Zelador', 'Financeiro', 'Mídia', 'Logística', 'Sacerdócio', 'Manutenção SPA', 'DIR Reunião', 'DIR Secretaria', 'DIR SPA', 'Extras'];
+            filterActivity.innerHTML = '<option value="">Todas as Atividades</option>';
+            const activities = [...new Set(records.map(r => r.activity))];
             activities.forEach(activity => {
                 const option = document.createElement('option');
                 option.value = activity;
                 option.textContent = activity;
-                activityFilter.appendChild(option);
+                filterActivity.appendChild(option);
             });
         }
-
-        function applyFilters() {
-            const userFilter = document.getElementById('filter-user').value;
-            const activityFilter = document.getElementById('filter-activity').value;
+        applyFilters.addEventListener('click', () => {
+            const userFilter = filterUser.value;
+            const activityFilter = filterActivity.value;
+            const monthFilter = filterMonth.value;
             let filtered = records;
-            if (userFilter) {
-                filtered = filtered.filter(r => r.user === userFilter);
+            if (userFilter) filtered = filtered.filter(r => r.user === userFilter);
+            if (activityFilter) filtered = filtered.filter(r => r.activity === activityFilter);
+            if (monthFilter) {
+                const [year, month] = monthFilter.split('-');
+                filtered = filtered.filter(r => {
+                    const recordDate = new Date(r.date);
+                    return recordDate.getFullYear() == year && recordDate.getMonth() + 1 == month;
+                });
             }
-            if (activityFilter) {
-                filtered = filtered.filter(r => r.activity === activityFilter);
-            }
-            loadRecords(filtered);
-        }
-
-        function generateReport() {
+            displayRecords(filtered);
+        });
+        function updateReports() {
             const now = new Date();
-            const month = now.getMonth();
-            const year = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+            const currentYear = now.getFullYear();
             const monthlyRecords = records.filter(r => {
                 const recordDate = new Date(r.date);
-                return recordDate.getMonth() === month && recordDate.getFullYear() === year;
+                return recordDate.getMonth() + 1 === currentMonth && recordDate.getFullYear() === currentYear;
             });
-            const userHours = {};
-            monthlyRecords.forEach(r => {
-                if (!userHours[r.user]) userHours[r.user] = 0;
-                userHours[r.user] += r.hours;
-            });
-            let report = '<h3>Relatório Mensal</h3>';
-            for (const user in userHours) {
-                report += `<p>${user}: ${userHours[user].toFixed(2)} horas</p>`;
-            }
-            document.getElementById('report').innerHTML = report;
+            const monthlyHours = monthlyRecords.reduce((sum, r) => sum + parseFloat(r.hoursWorked), 0);
+            const accumulatedHours = records.reduce((sum, r) => sum + parseFloat(r.hoursWorked), 0);
+            const requiredMonthly = users[currentUser].hoursPerDay * 30; // Aproximado
+            const requiredAccumulated = users[currentUser].hoursPerDay * 365; // Aproximado
+            monthlyReport.textContent = `Horas trabalhadas este mês: ${monthlyHours.toFixed(2)}h (Meta: ${requiredMonthly.toFixed(2)}h)`;
+            accumulatedReport.textContent = `Horas acumuladas: ${accumulatedHours.toFixed(2)}h (Meta: ${requiredAccumulated.toFixed(2)}h)`;
         }
-
-        function generateAccumulatedReport() {
-            const userHours = {};
-            records.forEach(r => {
-                if (!userHours[r.user]) userHours[r.user] = 0;
-                userHours[r.user] += r.hours;
-            });
-            let report = '<h3>Relatório Acumulado</h3>';
-            for (const user in userHours) {
-                report += `<p>${user}: ${userHours[user].toFixed(2)} horas</p>`;
-            }
-            document.getElementById('report').innerHTML = report;
-        }
-
-        function exportToCSV() {
-            let csv = 'Usuário,Atividade,Data,Hora Início,Hora Fim,Horas\n';
-            records.forEach(r => {
-                csv += `${r.user},${r.activity},${r.date},${r.startTime},${r.endTime},${r.hours}\n`;
-            });
+        exportCSV.addEventListener('click', () => {
+            const csv = 'Usuário,Atividade,Data,Hora Inicial,Hora Final,Horas Trabalhadas,Descrição\n' +
+                records.map(r => `${r.user},${r.activity},${r.date},${r.startTime},${r.endTime},${r.hoursWorked},${r.description}`).join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'registros.csv';
             a.click();
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('app-section').classList.add('hidden');
+            URL.revokeObjectURL(url);
+        });
+        function saveRecords() {
+            localStorage.setItem('records', JSON.stringify(records));
         }
     </script>
 </body>
