@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Atividades e Gestão de Voluntariado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            color: #ffd700;
+        }
+        form {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+        button {
+            background-color: #ffd700;
+            color: #121212;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e6c200;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #333;
+            text-align: left;
+        }
+        th {
+            background-color: #ffd700;
+            color: #121212;
+        }
+        .hidden {
+            display: none;
+        }
+        .logout {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Atividades e Gestão de Voluntariado</h1>
+        <div id="login-section">
+            <form id="login-form">
+                <h2>Login</h2>
+                <input type="text" id="username" placeholder="Usuário" required>
+                <input type="password" id="password" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+        </div>
+        <div id="app-section" class="hidden">
+            <button class="logout" onclick="logout()">Sair</button>
+            <h2>Registrar Atividade</h2>
+            <form id="activity-form">
+                <select id="activity" required>
+                    <option value="">Selecione uma atividade</option>
+                    <option value="Animais">Animais</option>
+                    <option value="CTG Área Social">CTG Área Social</option>
+                    <option value="CTG Lavanderia">CTG Lavanderia</option>
+                    <option value="CTG Banheiros e Vestiários">CTG Banheiros e Vestiários</option>
+                    <option value="Templos">Templos</option>
+                    <option value="Transfer Escola">Transfer Escola</option>
+                    <option value="Almoxarifado">Almoxarifado</option>
+                    <option value="Portaria">Portaria</option>
+                    <option value="Caseiro">Caseiro</option>
+                    <option value="Zelador">Zelador</option>
+                    <option value="Financeiro">Financeiro</option>
+                    <option value="Mídia">Mídia</option>
+                    <option value="Logística">Logística</option>
+                    <option value="Sacerdócio">Sacerdócio</option>
+                    <option value="Manutenção SPA">Manutenção SPA</option>
+                    <option value="DIR Reunião">DIR Reunião</option>
+                    <option value="DIR Secretaria">DIR Secretaria</option>
+                    <option value="DIR SPA">DIR SPA</option>
+                    <option value="Extras">Extras</option>
+                </select>
+                <input type="date" id="date" required>
+                <input type="time" id="start-time" required>
+                <input type="time" id="end-time" required>
+                <button type="submit">Registrar</button>
+            </form>
+            <h2>Registros</h2>
+            <div>
+                <select id="filter-user">
+                    <option value="">Todos os usuários</option>
+                </select>
+                <select id="filter-activity">
+                    <option value="">Todas as atividades</option>
+                </select>
+                <button onclick="applyFilters()">Filtrar</button>
+            </div>
+            <table id="records-table">
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Atividade</th>
+                        <th>Data</th>
+                        <th>Hora Início</th>
+                        <th>Hora Fim</th>
+                        <th>Horas</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <h2>Relatório de Banco de Horas</h2>
+            <button onclick="generateReport()">Gerar Relatório Mensal</button>
+            <button onclick="generateAccumulatedReport()">Gerar Relatório Acumulado</button>
+            <div id="report"></div>
+            <button onclick="exportToCSV()">Exportar para CSV</button>
+        </div>
+    </div>
+    <script>
+        const users = {
+            'Wakanda': { password: '1234', hoursPerDay: 3 },
+            'Honda': { password: '1234', hoursPerDay: 3 },
+            'Petrúnia': { password: '1234', hoursPerDay: 3 },
+            'Arya': { password: '1234', hoursPerDay: 3 },
+            'Ônix': { password: '1234', hoursPerDay: 3 },
+            'Lupía': { password: '1234', hoursPerDay: 3 },
+            'Ítalo': { password: '1234', hoursPerDay: 6 },
+            'Sirius': { password: '1234', hoursPerDay: 6 },
+            'Fernanda': { password: '1234', hoursPerDay: 3 },
+            'Giese': { password: '1234', hoursPerDay: 3 },
+            'Ana': { password: '1234', hoursPerDay: 3 },
+            'Thiago': { password: '1234', hoursPerDay: 3 },
+            'Paulo': { password: '1234', hoursPerDay: 3 },
+            'Annabel': { password: '1234', hoursPerDay: 3 }
+        };
+        let currentUser = null;
+        let records = JSON.parse(localStorage.getItem('records')) || [];
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (users[username] && users[username].password === password) {
+                currentUser = username;
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('app-section').classList.remove('hidden');
+                loadRecords();
+                populateFilters();
+            } else {
+                alert('Usuário ou senha incorretos');
+            }
+        });
+
+        document.getElementById('activity-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const activity = document.getElementById('activity').value;
+            const date = document.getElementById('date').value;
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+            const hours = calculateHours(startTime, endTime);
+            records.push({ user: currentUser, activity, date, startTime, endTime, hours });
+            localStorage.setItem('records', JSON.stringify(records));
+            loadRecords();
+            document.getElementById('activity-form').reset();
+        });
+
+        function calculateHours(start, end) {
+            const startDate = new Date(`1970-01-01T${start}:00`);
+            const endDate = new Date(`1970-01-01T${end}:00`);
+            return (endDate - startDate) / (1000 * 60 * 60);
+        }
+
+        function loadRecords(filteredRecords = records) {
+            const tbody = document.querySelector('#records-table tbody');
+            tbody.innerHTML = '';
+            filteredRecords.forEach((record, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.user}</td>
+                    <td>${record.activity}</td>
+                    <td>${record.date}</td>
+                    <td>${record.startTime}</td>
+                    <td>${record.endTime}</td>
+                    <td>${record.hours.toFixed(2)}</td>
+                    <td>
+                        <button onclick="editRecord(${index})">Editar</button>
+                        <button onclick="deleteRecord(${index})">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editRecord(index) {
+            const record = records[index];
+            document.getElementById('activity').value = record.activity;
+            document.getElementById('date').value = record.date;
+            document.getElementById('start-time').value = record.startTime;
+            document.getElementById('end-time').value = record.endTime;
+            records.splice(index, 1);
+            localStorage.setItem('records', JSON.stringify(records));
+            loadRecords();
+        }
+
+        function deleteRecord(index) {
+            records.splice(index, 1);
+            localStorage.setItem('records', JSON.stringify(records));
+            loadRecords();
+        }
+
+        function populateFilters() {
+            const userFilter = document.getElementById('filter-user');
+            Object.keys(users).forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                userFilter.appendChild(option);
+            });
+            const activityFilter = document.getElementById('filter-activity');
+            const activities = ['Animais', 'CTG Área Social', 'CTG Lavanderia', 'CTG Banheiros e Vestiários', 'Templos', 'Transfer Escola', 'Almoxarifado', 'Portaria', 'Caseiro', 'Zelador', 'Financeiro', 'Mídia', 'Logística', 'Sacerdócio', 'Manutenção SPA', 'DIR Reunião', 'DIR Secretaria', 'DIR SPA', 'Extras'];
+            activities.forEach(activity => {
+                const option = document.createElement('option');
+                option.value = activity;
+                option.textContent = activity;
+                activityFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const userFilter = document.getElementById('filter-user').value;
+            const activityFilter = document.getElementById('filter-activity').value;
+            let filtered = records;
+            if (userFilter) {
+                filtered = filtered.filter(r => r.user === userFilter);
+            }
+            if (activityFilter) {
+                filtered = filtered.filter(r => r.activity === activityFilter);
+            }
+            loadRecords(filtered);
+        }
+
+        function generateReport() {
+            const now = new Date();
+            const month = now.getMonth();
+            const year = now.getFullYear();
+            const monthlyRecords = records.filter(r => {
+                const recordDate = new Date(r.date);
+                return recordDate.getMonth() === month && recordDate.getFullYear() === year;
+            });
+            const userHours = {};
+            monthlyRecords.forEach(r => {
+                if (!userHours[r.user]) userHours[r.user] = 0;
+                userHours[r.user] += r.hours;
+            });
+            let report = '<h3>Relatório Mensal</h3>';
+            for (const user in userHours) {
+                report += `<p>${user}: ${userHours[user].toFixed(2)} horas</p>`;
+            }
+            document.getElementById('report').innerHTML = report;
+        }
+
+        function generateAccumulatedReport() {
+            const userHours = {};
+            records.forEach(r => {
+                if (!userHours[r.user]) userHours[r.user] = 0;
+                userHours[r.user] += r.hours;
+            });
+            let report = '<h3>Relatório Acumulado</h3>';
+            for (const user in userHours) {
+                report += `<p>${user}: ${userHours[user].toFixed(2)} horas</p>`;
+            }
+            document.getElementById('report').innerHTML = report;
+        }
+
+        function exportToCSV() {
+            let csv = 'Usuário,Atividade,Data,Hora Início,Hora Fim,Horas\n';
+            records.forEach(r => {
+                csv += `${r.user},${r.activity},${r.date},${r.startTime},${r.endTime},${r.hours}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'registros.csv';
+            a.click();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
